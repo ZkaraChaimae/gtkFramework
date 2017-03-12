@@ -39,6 +39,42 @@ typedef struct fenetre
   position position_fenetre;
 }fenetre;
 
+typedef struct zone_texte
+{
+    char texte[255];
+    GtkWidget* pTextView;
+    GtkWidget * parent;
+
+}zone_texte;
+
+typedef struct Select_fichier
+{
+  GtkWidget *file_selection;
+  GtkWidget *parent;
+  char *titre;
+  char *chemin;
+  GtkFileChooserAction action;
+
+}select_fichier;
+
+typedef struct zone_saisie
+{
+   GtkWidget *entry;
+   GtkWidget *parent;
+   int longueur_max;
+   char message[70];
+   int visible;           /* 1: caractères visibles , 0: non visible */
+   char invisible;        /* le caractère d'invisibilité */
+}zone_saisie;
+
+typedef struct bouton
+{
+    GtkWidget *pbtn;
+    GtkStockItem * icone ;
+    char label[30];
+    int boolean ; // si le label et avec mnemonic ou non
+    GtkWidget * parent;
+}bouton ;
 
 fenetre* initialiser_fenetre(char type,char titre[25], int hauteur,int largeur,int pos,int x,int y)
 {
@@ -280,4 +316,141 @@ void creation_radio_bouton(radio * r)
     ajouter_container(r->parent,l->pRadio);
     l=l->suivant;
   }
+}
+
+
+typedef struct elem_check
+{
+    GtkWidget *pCheck; // l'objet boutton radio radio
+    char nom[30]; // le nom du boutton
+    //struct elem_check * suivant; // pointeur sur le suivan
+    GtkWidget* parent;
+}elem_check;
+
+elem_check* initialiser_check_button(char nom[30],GtkWidget* parent)
+{
+    elem_check * elem=(elem_check*)malloc(sizeof(elem_check));
+    elem->parent = parent;
+    strcpy(elem->nom,nom);
+    return ((elem_check*)elem);
+}
+
+void creation_check_bouton(elem_check * check)
+{
+    check->pCheck = gtk_check_button_new_with_label (check->nom);
+    ajouter_container(check->parent,check->pCheck);
+}
+
+typedef struct layout
+{
+  GtkWidget *conteneur;
+  GtkWidget *parent;
+  Taille t;
+}layout;
+
+void creation_layout(GtkWidget* parent,int largeur,int hauteur)
+{
+    layout* l = (layout*)malloc(sizeof(layout));
+    l->parent = parent;
+    l->t.largeur = largeur;
+    l->t.hauteur = hauteur;
+    l->conteneur=gtk_layout_new (NULL,NULL);
+    ajouter_container(parent,l->conteneur);
+    gtk_layout_set_size (GTK_LAYOUT(l->conteneur),l->t.largeur,l->t.hauteur);
+}
+
+void ajout_composants_layout(layout *l,GtkWidget *child,int x,int y)
+{
+  gtk_layout_put(GTK_LAYOUT(l->conteneur),child,x,y);
+}
+
+void move_child_inlayout(layout *l,GtkWidget *child,int x,int y)
+{
+   gtk_layout_move (GTK_LAYOUT(l->conteneur),child,x,y);
+}
+
+bouton* initialiser_bouton(GtkWidget* parent,GtkStockItem * icone,char titre[30],int boolean)
+{
+    bouton* btn = (bouton*)malloc(sizeof(bouton));
+    btn->parent = parent;
+    btn->icone = icone;
+    btn->boolean = boolean;
+    strcpy(btn->label,titre);
+    return ((bouton*)btn);
+}
+
+void creation_bouton_simple(bouton * b)
+{
+
+    if(b->icone)
+     {
+        /* Bouton avec un label, un raccourci et une image */
+        b->pbtn= gtk_button_new_from_icon_name((char*)b->icone,GTK_ICON_SIZE_BUTTON);
+     }
+     else
+     {
+       if(!b->boolean)            /* Bouton avec un label */
+            b->pbtn = gtk_button_new_with_label(b->label);
+       else           /* Bouton avec un label et un raccourci */
+           b->pbtn=gtk_button_new_with_mnemonic(b->label);
+     }
+     ajouter_container(b->parent,b->pbtn);
+}
+
+
+zone_saisie* initialiser_zone_saisie
+        (GtkWidget* parent,int maxlength,char msg[70],int visibility,char invisible)
+{
+    zone_saisie *Entry = (zone_saisie*)malloc(sizeof(zone_saisie));
+    Entry->parent = parent;
+    Entry->longueur_max = maxlength;
+    strcpy(Entry->message,msg);
+    Entry->visible = visibility;
+    Entry->invisible = invisible;
+    return ((zone_saisie*)Entry);
+}
+
+void creation_zone_saisie(zone_saisie *zone)
+{
+  zone->entry=gtk_entry_new();
+  if(zone->longueur_max!=-1)
+  gtk_entry_set_max_length((GtkEntry*)zone->entry,zone->longueur_max);
+
+  if(zone->message)
+  {
+      //zone->message = g_locale_to_utf8(zone->message,-1, NULL, NULL, NULL);
+      gtk_entry_set_text(GTK_ENTRY(zone->entry),zone->message);
+  }
+  if(zone->visible==1)
+  gtk_entry_set_visibility(GTK_ENTRY(zone->entry),TRUE);
+  else
+  {
+  gtk_entry_set_visibility(GTK_ENTRY(zone->entry),FALSE);
+  gtk_entry_set_invisible_char(GTK_ENTRY(zone->entry),zone->invisible);
+  }
+  ajouter_container(zone->parent,zone->entry);
+}
+
+char *recuperer_entry_text(GtkWidget *entry)
+{
+   return ((char*)gtk_entry_get_text(GTK_ENTRY(entry)));
+}
+
+
+zone_texte* initialiser_zone_texte(GtkWidget* parent)
+{
+    zone_texte* texte = (zone_texte*)malloc(sizeof(zone_texte));
+    texte->parent = parent;
+    return ((zone_texte*)texte);
+}
+/*
+fonction qui permet la creation d'une Zone de texte
+entree : pointeur sur la structure zone_texte
+sortie : creation du composant
+*/
+void creation_zone_texte(zone_texte * zt)
+{
+    zt->pTextView = gtk_text_view_new();
+    //ajouter_container(zt->parent,zt->pTextView);
+    //gtk_box_pack_start(GTK_BOX(zt->parent),zt->pTextView,TRUE,TRUE,0);
 }
